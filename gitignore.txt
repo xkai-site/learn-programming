@@ -1,0 +1,18 @@
+# 忽略目录
+node_modules/
+dist/
+.idea/
+.vscode/
+
+# 忽略文件
+.env
+*.log
+*.tmp
+.DS_Store
+
+# 忽略特定扩展名
+*.exe
+*.dll
+
+# 例外规则（不忽略某个特定文件）
+!important.log
