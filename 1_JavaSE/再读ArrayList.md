@@ -23,3 +23,18 @@
 | 高频头部/中间插入/删除 | `LinkedList`                 | 无需移动元素（但需遍历到位置）。                    |
 | 内存敏感         | `ArrayList`                  | `LinkedList` 的节点开销更大（每个元素额外存储前后指针）。 |
 | 并发场景         | `CopyOnWriteArrayList` 或并发队列 | 标准 `ArrayList`/`LinkedList` 非线程安全。  |
+## 3.关于ArrayList的扩容机制
+
+首先，说到扩容就要说到初始化。其实ArrayList定义了三种初始化方式：**有参、无参、引入**。
+用无参举例比较容易，刚开始没有参数。会分配一个空数组给ArrayList。
+如果开始add()添加元素，那么数组就需要扩容。
+1. ensureCapacityInternal() 入口函数，目的是确保数组容量。只做下面方法调用
+2. calculateCapacity() 计算需要的容量，一般返回默认长度或是所需存放元素个数
+3. ensureExplicitCapacity() 判断是否需要扩容。拿上一步calculateCapacity()返回结果与当前数组长度相比
+4. 如果数组长度无法满足元素的存储需求，则进行grow()扩容，扩容机制为当前数组长度的1.5倍
+5. 使用位运算，newCapacity = oldCapacity + (oldCapacity >> 1);
+6. 进行一系列比较：
+   - 将newCapacity和所需存放元素个数进行比较，如果newCapacity不够就直接按照所需存放元素个数作为newCapacity。
+   - 将newCapacity与MAX_ARRAY_SIZE作比较，如果newCapacity更大，就将所需存放元素个数和MAX_ARRAY_SIZE作比较后，将更大的值赋给newCapacity。
+
+可以看到，需要扩容时一直是以newCapacity作为核心变量，而不是所需存放元素个数。这避免了频繁扩容，当然，也使得代码维护难度大了一丢丢。此外还有一个比较有意思的是MAX_ARRAY_SIZE并不代表最大值，而是Integer.MAX_VALUE - 8。这个8作为预留数组的部分信息（如length）进入JVM，当第六步最后一次所需存放元素个数和MAX_ARRAY_SIZE作比较时，若是所需存放元素个数更大，那就将这个真正的最大值Integer.MAX_VALUE赋给数组。这样也不用记录数组信息，因为length就是最大值。
